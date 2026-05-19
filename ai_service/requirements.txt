@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+spacy
+transformers
+pytesseract
+Pillow
+pydantic
+python-multipart

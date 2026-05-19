@@ -1,0 +1,253 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  OVERDUE
+  VALIDATED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum DocumentStatus {
+  PENDING
+  VALIDATED
+  REJECTED
+}
+
+enum OnboardingStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  DELAYED
+  COMPLETED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  role      Role     @default(EMPLOYEE)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employeeProfile  Employee?
+  managedTeams     Department[] @relation("DepartmentManager")
+  tasksAssigned    Task[]       @relation("TaskAssignee")
+  evaluationsGiven Evaluation[] @relation("Evaluator")
+  feedbacksGiven   Feedback[]   @relation("FeedbackAuthor")
+  notifications    Notification[]
+  auditLogs        AuditLog[]
+}
+
+model Department {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  managerId   String?
+  manager     User?    @relation("DepartmentManager", fields: [managerId], references: [id])
+  employees   Employee[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Position {
+  id                    String   @id @default(uuid())
+  title                 String
+  description           String?
+  requiredSkills        String[]
+  mandatoryDocuments    String[]
+  requiredEquipment     String[]
+  mandatoryTrainings    String[]
+  standardDurationDays  Int      @default(30)
+  
+  employees             Employee[]
+  template              OnboardingTemplate?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model Employee {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id])
+  departmentId   String?
+  department     Department? @relation(fields: [departmentId], references: [id])
+  positionId     String
+  position       Position @relation(fields: [positionId], references: [id])
+  startDate      DateTime
+  
+  onboarding     EmployeeOnboarding?
+  evaluations    Evaluation[] @relation("EvaluatedEmployee")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model OnboardingTemplate {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  positionId  String   @unique
+  position    Position @relation(fields: [positionId], references: [id])
+  isActive    Boolean  @default(true)
+  
+  steps       OnboardingStep[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model OnboardingStep {
+  id          String             @id @default(uuid())
+  title       String
+  description String?
+  order       Int
+  templateId  String
+  template    OnboardingTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  
+  tasks       TaskTemplate[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
+
+model TaskTemplate {
+  id               String         @id @default(uuid())
+  title            String
+  description      String?
+  stepId           String
+  step             OnboardingStep @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  defaultAssigneeRole Role
+  priority         Priority       @default(MEDIUM)
+  daysToComplete   Int            @default(7)
+  
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+model EmployeeOnboarding {
+  id          String   @id @default(uuid())
+  employeeId  String   @unique
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  status      OnboardingStatus @default(NOT_STARTED)
+  progress    Float    @default(0)
+  startDate   DateTime @default(now())
+  endDate     DateTime?
+  
+  tasks       Task[]
+  documents   Document[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Task {
+  id             String             @id @default(uuid())
+  title          String
+  description    String?
+  onboardingId   String
+  onboarding     EmployeeOnboarding @relation(fields: [onboardingId], references: [id], onDelete: Cascade)
+  assigneeId     String?
+  assignee       User?              @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  status         TaskStatus         @default(TODO)
+  priority       Priority           @default(MEDIUM)
+  dueDate        DateTime
+  completedAt    DateTime?
+  comments       String?
+  
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+}
+
+model Document {
+  id             String             @id @default(uuid())
+  name           String
+  type           String
+  url            String
+  onboardingId   String
+  onboarding     EmployeeOnboarding @relation(fields: [onboardingId], references: [id], onDelete: Cascade)
+  status         DocumentStatus     @default(PENDING)
+  uploadedAt     DateTime           @default(now())
+  
+  validations    DocumentValidation[]
+  aiAnalysis     AIAnalysisResult?
+}
+
+model DocumentValidation {
+  id          String   @id @default(uuid())
+  documentId  String
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  validatorId String
+  status      DocumentStatus
+  comments    String?
+  validatedAt DateTime @default(now())
+}
+
+model Evaluation {
+  id              String   @id @default(uuid())
+  employeeId      String
+  employee        Employee @relation("EvaluatedEmployee", fields: [employeeId], references: [id])
+  evaluatorId     String
+  evaluator       User     @relation("Evaluator", fields: [evaluatorId], references: [id])
+  score           Float
+  comments        String?
+  isAutoEvaluation Boolean @default(false)
+  createdAt       DateTime @default(now())
+}
+
+model Feedback {
+  id          String   @id @default(uuid())
+  authorId    String
+  author      User     @relation("FeedbackAuthor", fields: [authorId], references: [id])
+  content     String
+  createdAt   DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  entity    String
+  entityId  String
+  details   String?
+  createdAt DateTime @default(now())
+}
+
+model AIAnalysisResult {
+  id             String   @id @default(uuid())
+  documentId     String   @unique
+  document       Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentType   String
+  confidence     Float
+  extractedData  String
+  missingFields  String[]
+  createdAt      DateTime @default(now())
+}
