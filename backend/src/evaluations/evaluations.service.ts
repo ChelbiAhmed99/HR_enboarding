@@ -1,41 +1,70 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class EvaluationsService {
   constructor(private prisma: PrismaService) {}
 
-  findAll() {
-    return [
-      {
-        id: '1',
-        employeeName: 'Alice Dupont',
-        position: 'Développeur Fullstack',
-        dueDate: '20/05/2026',
-        status: 'À faire',
-        type: 'Évaluation de fin de mois 1',
-        initials: 'AD',
-        color: 'from-purple-500 to-indigo-500',
-        createdAt: new Date(),
-        updatedAt: new Date()
+  async findAll() {
+    const evals = await this.prisma.evaluation.findMany({
+      include: {
+        employee: { include: { user: true, position: true } },
+        evaluator: true,
       },
-      {
-        id: '2',
-        employeeName: 'Marc Martin',
-        position: 'Ingénieur Système',
-        dueDate: '15/05/2026',
-        status: 'Complétée',
-        type: 'Évaluation mi-parcours',
-        score: 8.5,
-        initials: 'MM',
-        color: 'from-blue-500 to-sky-500',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    ];
+      orderBy: { createdAt: 'desc' },
+    });
+    return evals.map(this.mapEvaluation);
   }
 
-  findOne(id: string) {
-    return this.findAll().find(e => e.id === id);
+  async findOne(id: string) {
+    const ev = await this.prisma.evaluation.findUnique({
+      where: { id },
+      include: {
+        employee: { include: { user: true, position: true } },
+        evaluator: true,
+      },
+    });
+    if (!ev) throw new NotFoundException(`Evaluation ${id} not found`);
+    return this.mapEvaluation(ev);
+  }
+
+  async findByEmployee(employeeId: string) {
+    const evals = await this.prisma.evaluation.findMany({
+      where: { employeeId },
+      include: {
+        employee: { include: { user: true, position: true } },
+        evaluator: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return evals.map(this.mapEvaluation);
+  }
+
+  async create(employeeId: string, evaluatorId: string, score: number, comments?: string, isAutoEvaluation = false) {
+    const ev = await this.prisma.evaluation.create({
+      data: { employeeId, evaluatorId, score, comments, isAutoEvaluation },
+      include: {
+        employee: { include: { user: true, position: true } },
+        evaluator: true,
+      },
+    });
+    return this.mapEvaluation(ev);
+  }
+
+  private mapEvaluation(ev: any) {
+    return {
+      id: ev.id,
+      employeeId: ev.employeeId,
+      evaluatorId: ev.evaluatorId,
+      score: ev.score,
+      comments: ev.comments,
+      isAutoEvaluation: ev.isAutoEvaluation,
+      createdAt: ev.createdAt,
+      employeeFirstName: ev.employee?.user?.firstName,
+      employeeLastName: ev.employee?.user?.lastName,
+      evaluatorFirstName: ev.evaluator?.firstName,
+      evaluatorLastName: ev.evaluator?.lastName,
+      positionTitle: ev.employee?.position?.title,
+    };
   }
 }

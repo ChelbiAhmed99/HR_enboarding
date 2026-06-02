@@ -1,4 +1,12 @@
-import { ObjectType, Field, ID } from '@nestjs/graphql';
+import { ObjectType, Field, ID, registerEnumType } from '@nestjs/graphql';
+
+export enum DocumentStatus {
+  PENDING = 'PENDING',
+  VALIDATED = 'VALIDATED',
+  REJECTED = 'REJECTED',
+}
+
+registerEnumType(DocumentStatus, { name: 'DocumentStatus' });
 
 @ObjectType()
 export class Document {
@@ -6,8 +14,30 @@ export class Document {
   id: string;
 
   @Field()
-  createdAt: Date;
+  name: string;
 
   @Field()
-  updatedAt: Date;
+  type: string;
+
+  @Field()
+  url: string;
+
+  @Field()
+  onboardingId: string;
+
+  @Field(() => DocumentStatus)
+  status: DocumentStatus;
+
+  @Field()
+  uploadedAt: Date;
+
+  // Denormalized for frontend
+  @Field({ nullable: true })
+  employeeFirstName?: string;
+
+  @Field({ nullable: true })
+  employeeLastName?: string;
+
+  @Field({ nullable: true })
+  aiScore?: number;
 }

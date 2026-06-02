@@ -1,0 +1,96 @@
+import { EmployeesService } from './employees.service';
+export declare class EmployeesResolver {
+    private readonly employeesService;
+    constructor(employeesService: EmployeesService);
+    findAll(): Promise<{
+        id: any;
+        userId: any;
+        departmentId: any;
+        positionId: any;
+        startDate: any;
+        createdAt: any;
+        updatedAt: any;
+        userEmail: any;
+        userFirstName: any;
+        userLastName: any;
+        positionTitle: any;
+        departmentName: any;
+        onboardingStatus: any;
+        onboardingProgress: any;
+        onboardingId: any;
+    }[]>;
+    findOne(id: string): Promise<{
+        id: any;
+        userId: any;
+        departmentId: any;
+        positionId: any;
+        startDate: any;
+        createdAt: any;
+        updatedAt: any;
+        userEmail: any;
+        userFirstName: any;
+        userLastName: any;
+        positionTitle: any;
+        departmentName: any;
+        onboardingStatus: any;
+        onboardingProgress: any;
+        onboardingId: any;
+    }>;
+    findByUserId(userId: string): Promise<{
+        id: any;
+        userId: any;
+        departmentId: any;
+        positionId: any;
+        startDate: any;
+        createdAt: any;
+        updatedAt: any;
+        userEmail: any;
+        userFirstName: any;
+        userLastName: any;
+        positionTitle: any;
+        departmentName: any;
+        onboardingStatus: any;
+        onboardingProgress: any;
+        onboardingId: any;
+    }>;
+    getDashboardStats(): Promise<{
+        total: number;
+        inProgress: number;
+        completed: number;
+        pendingDocs: number;
+    }>;
+    create(email: string, firstName: string, lastName: string, positionId: string, departmentId?: string): Promise<{
+        id: any;
+        userId: any;
+        departmentId: any;
+        positionId: any;
+        startDate: any;
+        createdAt: any;
+        updatedAt: any;
+        userEmail: any;
+        userFirstName: any;
+        userLastName: any;
+        positionTitle: any;
+        departmentName: any;
+        onboardingStatus: any;
+        onboardingProgress: any;
+        onboardingId: any;
+    }>;
+    update(id: string, positionId?: string, departmentId?: string): Promise<{
+        id: any;
+        userId: any;
+        departmentId: any;
+        positionId: any;
+        startDate: any;
+        createdAt: any;
+        updatedAt: any;
+        userEmail: any;
+        userFirstName: any;
+        userLastName: any;
+        positionTitle: any;
+        departmentName: any;
+        onboardingStatus: any;
+        onboardingProgress: any;
+        onboardingId: any;
+    }>;
+}

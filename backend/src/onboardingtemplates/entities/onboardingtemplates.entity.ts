@@ -1,4 +1,4 @@
-import { ObjectType, Field, ID } from '@nestjs/graphql';
+import { ObjectType, Field, ID, Int } from '@nestjs/graphql';
 
 @ObjectType()
 export class OnboardingTemplate {
@@ -6,8 +6,27 @@ export class OnboardingTemplate {
   id: string;
 
   @Field()
+  name: string;
+
+  @Field({ nullable: true })
+  description?: string;
+
+  @Field()
+  positionId: string;
+
+  @Field()
+  isActive: boolean;
+
+  @Field()
   createdAt: Date;
 
   @Field()
   updatedAt: Date;
+
+  // Denormalized
+  @Field({ nullable: true })
+  positionTitle?: string;
+
+  @Field(() => Int, { nullable: true })
+  stepsCount?: number;
 }

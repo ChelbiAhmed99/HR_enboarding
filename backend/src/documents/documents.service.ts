@@ -1,15 +1,129 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { DocumentStatus } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class DocumentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notifications: NotificationsService,
+  ) {}
 
-  findAll() {
-    return this.prisma.document.findMany();
+  async findAll() {
+    const docs = await this.prisma.document.findMany({
+      include: {
+        onboarding: { include: { employee: { include: { user: true } } } },
+        aiAnalysis: true,
+      },
+      orderBy: { uploadedAt: 'desc' },
+    });
+    return docs.map(this.mapDocument);
   }
 
-  findOne(id: string) {
-    return this.prisma.document.findUnique({ where: { id } });
+  async findOne(id: string) {
+    const doc = await this.prisma.document.findUnique({
+      where: { id },
+      include: {
+        onboarding: { include: { employee: { include: { user: true } } } },
+        aiAnalysis: true,
+      },
+    });
+    if (!doc) throw new NotFoundException(`Document ${id} not found`);
+    return this.mapDocument(doc);
+  }
+
+  async findByOnboarding(onboardingId: string) {
+    const docs = await this.prisma.document.findMany({
+      where: { onboardingId },
+      include: {
+        onboarding: { include: { employee: { include: { user: true } } } },
+        aiAnalysis: true,
+      },
+      orderBy: { uploadedAt: 'desc' },
+    });
+    return docs.map(this.mapDocument);
+  }
+
+  async addDocument(onboardingId: string, name: string, type: string, url: string) {
+    const doc = await this.prisma.document.create({
+      data: {
+        onboardingId,
+        name,
+        type,
+        url,
+        status: DocumentStatus.PENDING,
+      },
+      include: {
+        onboarding: { include: { employee: { include: { user: true } } } },
+        aiAnalysis: true,
+      },
+    });
+    return this.mapDocument(doc);
+  }
+
+  async validate(id: string, validatorId: string) {
+    const doc = await this.prisma.document.update({
+      where: { id },
+      data: { status: DocumentStatus.VALIDATED },
+      include: {
+        onboarding: { include: { employee: { include: { user: true } } } },
+        aiAnalysis: true,
+      },
+    });
+    await this.prisma.documentValidation.create({
+      data: { documentId: id, validatorId, status: DocumentStatus.VALIDATED },
+    });
+    // Notify employee
+    const userId = doc.onboarding?.employee?.userId;
+    if (userId) {
+      await this.notifications.notifyUser(
+        userId,
+        '✅ Document validé',
+        `Votre document "${doc.name}" a été validé et archivé avec succès.`,
+        'DOCUMENT',
+      );
+    }
+    return this.mapDocument(doc);
+  }
+
+  async reject(id: string, validatorId: string, comments?: string) {
+    const doc = await this.prisma.document.update({
+      where: { id },
+      data: { status: DocumentStatus.REJECTED },
+      include: {
+        onboarding: { include: { employee: { include: { user: true } } } },
+        aiAnalysis: true,
+      },
+    });
+    await this.prisma.documentValidation.create({
+      data: { documentId: id, validatorId, status: DocumentStatus.REJECTED, comments },
+    });
+    // Notify employee
+    const userId = doc.onboarding?.employee?.userId;
+    if (userId) {
+      await this.notifications.notifyUser(
+        userId,
+        '❌ Document rejeté',
+        `Votre document "${doc.name}" a été rejeté.${comments ? ` Motif : ${comments}` : ' Veuillez le soumettre à nouveau.'}`,
+        'DOCUMENT',
+      );
+    }
+    return this.mapDocument(doc);
+  }
+
+  private mapDocument(doc: any) {
+    return {
+      id: doc.id,
+      name: doc.name,
+      type: doc.type,
+      url: doc.url,
+      onboardingId: doc.onboardingId,
+      status: doc.status,
+      uploadedAt: doc.uploadedAt,
+      employeeFirstName: doc.onboarding?.employee?.user?.firstName,
+      employeeLastName: doc.onboarding?.employee?.user?.lastName,
+      aiScore: doc.aiAnalysis ? Math.round(doc.aiAnalysis.confidence * 100) : null,
+    };
   }
 }

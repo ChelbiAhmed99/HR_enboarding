@@ -6,6 +6,7 @@ import { OnboardingTemplatesModule } from './onboardingtemplates/onboardingtempl
 import { EmployeesModule } from './employees/employees.module';
 import { PositionsModule } from './positions/positions.module';
 import { DepartmentsModule } from './departments/departments.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
@@ -26,6 +27,7 @@ import { join } from 'path';
     EmployeesModule,
     PositionsModule,
     DepartmentsModule,
+    NotificationsModule,
     PrismaModule,
     UsersModule,
     AuthModule,

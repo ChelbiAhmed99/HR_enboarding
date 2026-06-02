@@ -1,0 +1,314 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type AuthResponse {
+  access_token: String!
+  user: User!
+}
+
+input CreateUserInput {
+  email: String!
+  firstName: String!
+  lastName: String!
+  role: Role
+}
+
+type DashboardStats {
+  completed: Int!
+  inProgress: Int!
+  pendingDocs: Int!
+  total: Int!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Department {
+  createdAt: DateTime!
+  description: String
+  employeeCount: Int
+  id: ID!
+  managerFirstName: String
+  managerId: String
+  managerLastName: String
+  name: String!
+  updatedAt: DateTime!
+}
+
+type Document {
+  aiScore: Float
+  employeeFirstName: String
+  employeeLastName: String
+  id: ID!
+  name: String!
+  onboardingId: String!
+  status: DocumentStatus!
+  type: String!
+  uploadedAt: DateTime!
+  url: String!
+}
+
+enum DocumentStatus {
+  PENDING
+  REJECTED
+  VALIDATED
+}
+
+type Employee {
+  createdAt: DateTime!
+  departmentId: String
+  departmentName: String
+  id: ID!
+  onboardingId: String
+  onboardingProgress: Float
+  onboardingStatus: String
+  positionId: String!
+  positionTitle: String
+  startDate: DateTime!
+  updatedAt: DateTime!
+  userEmail: String
+  userFirstName: String
+  userId: String!
+  userLastName: String
+}
+
+type EmployeeOnboarding {
+  createdAt: DateTime!
+  departmentName: String
+  employeeFirstName: String
+  employeeId: String!
+  employeeLastName: String
+  endDate: DateTime
+  id: ID!
+  positionTitle: String
+  progress: Float!
+  startDate: DateTime!
+  status: OnboardingStatus!
+  trialComment: String
+  trialEndDate: DateTime
+  trialValidated: Boolean
+  trialValidatedAt: DateTime
+  updatedAt: DateTime!
+}
+
+type Evaluation {
+  comments: String
+  createdAt: DateTime!
+  employeeFirstName: String
+  employeeId: String!
+  employeeLastName: String
+  evaluatorFirstName: String
+  evaluatorId: String!
+  evaluatorLastName: String
+  id: ID!
+  isAutoEvaluation: Boolean!
+  positionTitle: String
+  score: Float!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+type Mutation {
+  addDocument(name: String!, onboardingId: ID!, type: String!, url: String!): Document!
+  createDepartment(description: String, managerId: String, name: String!): Department!
+  createEmployee(departmentId: ID, email: String!, firstName: String!, lastName: String!, positionId: ID!): Employee!
+  createEvaluation(comments: String, employeeId: ID!, evaluatorId: ID!, isAutoEvaluation: Boolean, score: Float!): Evaluation!
+  createNotification(message: String!, title: String!, userId: ID!): NotificationEntity!
+  createOnboardingStep(description: String, order: Int!, templateId: String!, title: String!): OnboardingStepEntity!
+  createOnboardingTemplate(description: String, name: String!, positionId: String!): OnboardingTemplate!
+  createPosition(description: String, standardDurationDays: Int, title: String!): Position!
+  createTask(assigneeId: String, category: TaskCategory!, createdById: String, description: String, dueDate: String!, onboardingId: String!, priority: String!, title: String!): Task!
+  createTaskTemplate(daysToComplete: Int!, defaultAssigneeRole: String!, description: String, priority: String!, stepId: String!, title: String!): TaskTemplateEntity!
+  createUser(createUserInput: CreateUserInput!): User!
+  deleteDepartment(id: ID!): Department!
+  deleteOnboardingStep(id: ID!): OnboardingStepEntity!
+  deletePosition(id: ID!): Position!
+  deleteTaskTemplate(id: ID!): TaskTemplateEntity!
+  login(loginInput: LoginInput!): AuthResponse!
+  markAllNotificationsRead(userId: ID!): Boolean!
+  markNotificationRead(id: ID!): NotificationEntity!
+  markTaskDone(id: ID!): Task!
+  rejectDocument(comments: String, id: ID!, validatorId: ID!): Document!
+  rejectTask(id: ID!): Task!
+  setTrialEndDate(id: ID!, trialEndDate: String!): EmployeeOnboarding!
+  toggleTemplateActive(id: ID!): OnboardingTemplate!
+  updateEmployee(departmentId: ID, id: ID!, positionId: ID): Employee!
+  updateTaskStatus(id: ID!, status: TaskStatus!): Task!
+  validateDocument(id: ID!, validatorId: ID!): Document!
+  validateTask(id: ID!): Task!
+  validateTrialPeriod(comment: String, id: ID!, validated: Boolean!, validatedById: String): EmployeeOnboarding!
+}
+
+type NotificationEntity {
+  createdAt: DateTime!
+  id: ID!
+  isRead: Boolean!
+  message: String!
+  title: String!
+  userId: String!
+}
+
+enum OnboardingStatus {
+  COMPLETED
+  DELAYED
+  IN_PROGRESS
+  NOT_STARTED
+}
+
+type OnboardingStepEntity {
+  createdAt: DateTime!
+  description: String
+  id: ID!
+  order: Int!
+  tasks: [TaskTemplateEntity!]!
+  templateId: String!
+  title: String!
+  updatedAt: DateTime!
+}
+
+type OnboardingTemplate {
+  createdAt: DateTime!
+  description: String
+  id: ID!
+  isActive: Boolean!
+  name: String!
+  positionId: String!
+  positionTitle: String
+  stepsCount: Int
+  updatedAt: DateTime!
+}
+
+type OnboardingTemplateDetail {
+  createdAt: DateTime!
+  description: String
+  id: ID!
+  isActive: Boolean!
+  name: String!
+  positionId: String!
+  positionTitle: String
+  steps: [OnboardingStepEntity!]!
+  stepsCount: Int
+  updatedAt: DateTime!
+}
+
+type Position {
+  createdAt: DateTime!
+  description: String
+  id: ID!
+  mandatoryDocuments: [String!]!
+  mandatoryTrainings: [String!]!
+  requiredEquipment: [String!]!
+  requiredSkills: [String!]!
+  standardDurationDays: Float!
+  title: String!
+  updatedAt: DateTime!
+}
+
+enum Priority {
+  CRITICAL
+  HIGH
+  LOW
+  MEDIUM
+}
+
+type Query {
+  dashboardStats: DashboardStats!
+  department(id: ID!): Department
+  departments: [Department!]!
+  document(id: ID!): Document
+  documents: [Document!]!
+  documentsByOnboarding(onboardingId: ID!): [Document!]!
+  employee(id: ID!): Employee
+  employeeByUserId(userId: ID!): Employee
+  employeeOnboarding(id: ID!): EmployeeOnboarding
+  employeeOnboardings: [EmployeeOnboarding!]!
+  employees: [Employee!]!
+  evaluation(id: ID!): Evaluation
+  evaluations: [Evaluation!]!
+  evaluationsByEmployee(employeeId: ID!): [Evaluation!]!
+  myNotifications(userId: ID!): [NotificationEntity!]!
+  onboardingByEmployee(employeeId: ID!): EmployeeOnboarding
+  onboardingTemplate(id: ID!): OnboardingTemplate
+  onboardingTemplateDetail(id: ID!): OnboardingTemplateDetail
+  onboardingTemplates: [OnboardingTemplate!]!
+  pendingTasksForManager(managerId: ID!): [Task!]!
+  position(id: ID!): Position!
+  positions: [Position!]!
+  task(id: ID!): Task
+  tasks: [Task!]!
+  tasksByAssignee(assigneeId: ID!): [Task!]!
+  tasksByEmployee(employeeId: ID!): [Task!]!
+  tasksByOnboarding(onboardingId: ID!): [Task!]!
+  unreadNotificationsCount(userId: ID!): Int!
+  user(id: String!): User!
+  users: [User!]!
+}
+
+enum Role {
+  ADMIN
+  EMPLOYEE
+  MANAGER
+}
+
+type Task {
+  assigneeFirstName: String
+  assigneeId: String
+  assigneeLastName: String
+  category: TaskCategory!
+  comments: String
+  completedAt: DateTime
+  createdAt: DateTime!
+  description: String
+  dueDate: DateTime!
+  employeeFirstName: String
+  employeeLastName: String
+  id: ID!
+  onboardingId: String!
+  priority: Priority!
+  status: TaskStatus!
+  title: String!
+  updatedAt: DateTime!
+}
+
+enum TaskCategory {
+  ADMINISTRATIF
+  METIER
+  ONBOARDING
+}
+
+enum TaskStatus {
+  DONE
+  IN_PROGRESS
+  OVERDUE
+  TODO
+  VALIDATED
+}
+
+type TaskTemplateEntity {
+  createdAt: DateTime!
+  daysToComplete: Int!
+  defaultAssigneeRole: Role!
+  description: String
+  id: ID!
+  priority: Priority!
+  stepId: String!
+  title: String!
+  updatedAt: DateTime!
+}
+
+type User {
+  createdAt: DateTime!
+  email: String!
+  firstName: String!
+  id: ID!
+  isActive: Boolean!
+  lastName: String!
+  role: Role!
+  updatedAt: DateTime!
+}

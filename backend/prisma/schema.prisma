@@ -6,6 +6,7 @@ datasource db {
   provider = "postgresql"
 }
 
+
 enum Role {
   ADMIN
   MANAGER
@@ -18,6 +19,12 @@ enum TaskStatus {
   DONE
   OVERDUE
   VALIDATED
+}
+
+enum TaskCategory {
+  ONBOARDING
+  METIER
+  ADMINISTRATIF
 }
 
 enum Priority {
@@ -54,6 +61,7 @@ model User {
   employeeProfile  Employee?
   managedTeams     Department[] @relation("DepartmentManager")
   tasksAssigned    Task[]       @relation("TaskAssignee")
+  tasksCreated     Task[]       @relation("TaskCreator")
   evaluationsGiven Evaluation[] @relation("Evaluator")
   feedbacksGiven   Feedback[]   @relation("FeedbackAuthor")
   notifications    Notification[]
@@ -151,7 +159,12 @@ model EmployeeOnboarding {
   progress    Float    @default(0)
   startDate   DateTime @default(now())
   endDate     DateTime?
-  
+  trialEndDate         DateTime?
+  trialValidated       Boolean?
+  trialValidatedAt     DateTime?
+  trialValidatedById   String?
+  trialComment         String?
+
   tasks       Task[]
   documents   Document[]
   createdAt   DateTime @default(now())
@@ -166,12 +179,15 @@ model Task {
   onboarding     EmployeeOnboarding @relation(fields: [onboardingId], references: [id], onDelete: Cascade)
   assigneeId     String?
   assignee       User?              @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  createdById    String?
+  createdBy      User?              @relation("TaskCreator", fields: [createdById], references: [id])
   status         TaskStatus         @default(TODO)
   priority       Priority           @default(MEDIUM)
+  category       TaskCategory       @default(ONBOARDING)
   dueDate        DateTime
   completedAt    DateTime?
   comments       String?
-  
+
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
 }

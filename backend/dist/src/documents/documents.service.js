@@ -1,0 +1,130 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DocumentsService = void 0;
+const common_1 = require("@nestjs/common");
+const prisma_service_1 = require("../prisma/prisma.service");
+const client_1 = require("@prisma/client");
+const notifications_service_1 = require("../notifications/notifications.service");
+let DocumentsService = class DocumentsService {
+    prisma;
+    notifications;
+    constructor(prisma, notifications) {
+        this.prisma = prisma;
+        this.notifications = notifications;
+    }
+    async findAll() {
+        const docs = await this.prisma.document.findMany({
+            include: {
+                onboarding: { include: { employee: { include: { user: true } } } },
+                aiAnalysis: true,
+            },
+            orderBy: { uploadedAt: 'desc' },
+        });
+        return docs.map(this.mapDocument);
+    }
+    async findOne(id) {
+        const doc = await this.prisma.document.findUnique({
+            where: { id },
+            include: {
+                onboarding: { include: { employee: { include: { user: true } } } },
+                aiAnalysis: true,
+            },
+        });
+        if (!doc)
+            throw new common_1.NotFoundException(`Document ${id} not found`);
+        return this.mapDocument(doc);
+    }
+    async findByOnboarding(onboardingId) {
+        const docs = await this.prisma.document.findMany({
+            where: { onboardingId },
+            include: {
+                onboarding: { include: { employee: { include: { user: true } } } },
+                aiAnalysis: true,
+            },
+            orderBy: { uploadedAt: 'desc' },
+        });
+        return docs.map(this.mapDocument);
+    }
+    async addDocument(onboardingId, name, type, url) {
+        const doc = await this.prisma.document.create({
+            data: {
+                onboardingId,
+                name,
+                type,
+                url,
+                status: client_1.DocumentStatus.PENDING,
+            },
+            include: {
+                onboarding: { include: { employee: { include: { user: true } } } },
+                aiAnalysis: true,
+            },
+        });
+        return this.mapDocument(doc);
+    }
+    async validate(id, validatorId) {
+        const doc = await this.prisma.document.update({
+            where: { id },
+            data: { status: client_1.DocumentStatus.VALIDATED },
+            include: {
+                onboarding: { include: { employee: { include: { user: true } } } },
+                aiAnalysis: true,
+            },
+        });
+        await this.prisma.documentValidation.create({
+            data: { documentId: id, validatorId, status: client_1.DocumentStatus.VALIDATED },
+        });
+        const userId = doc.onboarding?.employee?.userId;
+        if (userId) {
+            await this.notifications.notifyUser(userId, '✅ Document validé', `Votre document "${doc.name}" a été validé et archivé avec succès.`, 'DOCUMENT');
+        }
+        return this.mapDocument(doc);
+    }
+    async reject(id, validatorId, comments) {
+        const doc = await this.prisma.document.update({
+            where: { id },
+            data: { status: client_1.DocumentStatus.REJECTED },
+            include: {
+                onboarding: { include: { employee: { include: { user: true } } } },
+                aiAnalysis: true,
+            },
+        });
+        await this.prisma.documentValidation.create({
+            data: { documentId: id, validatorId, status: client_1.DocumentStatus.REJECTED, comments },
+        });
+        const userId = doc.onboarding?.employee?.userId;
+        if (userId) {
+            await this.notifications.notifyUser(userId, '❌ Document rejeté', `Votre document "${doc.name}" a été rejeté.${comments ? ` Motif : ${comments}` : ' Veuillez le soumettre à nouveau.'}`, 'DOCUMENT');
+        }
+        return this.mapDocument(doc);
+    }
+    mapDocument(doc) {
+        return {
+            id: doc.id,
+            name: doc.name,
+            type: doc.type,
+            url: doc.url,
+            onboardingId: doc.onboardingId,
+            status: doc.status,
+            uploadedAt: doc.uploadedAt,
+            employeeFirstName: doc.onboarding?.employee?.user?.firstName,
+            employeeLastName: doc.onboarding?.employee?.user?.lastName,
+            aiScore: doc.aiAnalysis ? Math.round(doc.aiAnalysis.confidence * 100) : null,
+        };
+    }
+};
+exports.DocumentsService = DocumentsService;
+exports.DocumentsService = DocumentsService = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        notifications_service_1.NotificationsService])
+], DocumentsService);
+//# sourceMappingURL=documents.service.js.map

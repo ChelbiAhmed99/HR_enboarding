@@ -1,0 +1,50 @@
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateUserInput } from './dto/create-user.input';
+export declare class UsersService {
+    private prisma;
+    constructor(prisma: PrismaService);
+    create(createUserInput: CreateUserInput): Promise<{
+        id: string;
+        email: string;
+        password: string;
+        firstName: string;
+        lastName: string;
+        role: import("@prisma/client").$Enums.Role;
+        isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    findAll(): import("@prisma/client").Prisma.PrismaPromise<{
+        id: string;
+        email: string;
+        password: string;
+        firstName: string;
+        lastName: string;
+        role: import("@prisma/client").$Enums.Role;
+        isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>;
+    findOne(id: string): import("@prisma/client").Prisma.Prisma__UserClient<{
+        id: string;
+        email: string;
+        password: string;
+        firstName: string;
+        lastName: string;
+        role: import("@prisma/client").$Enums.Role;
+        isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+    } | null, null, import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    findByEmail(email: string): import("@prisma/client").Prisma.Prisma__UserClient<{
+        id: string;
+        email: string;
+        password: string;
+        firstName: string;
+        lastName: string;
+        role: import("@prisma/client").$Enums.Role;
+        isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+    } | null, null, import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+}

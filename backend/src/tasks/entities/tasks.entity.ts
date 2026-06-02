@@ -8,6 +8,12 @@ export enum TaskStatus {
   VALIDATED = 'VALIDATED'
 }
 
+export enum TaskCategory {
+  ONBOARDING = 'ONBOARDING',
+  METIER = 'METIER',
+  ADMINISTRATIF = 'ADMINISTRATIF',
+}
+
 export enum Priority {
   LOW = 'LOW',
   MEDIUM = 'MEDIUM',
@@ -17,6 +23,7 @@ export enum Priority {
 
 registerEnumType(TaskStatus, { name: 'TaskStatus' });
 registerEnumType(Priority, { name: 'Priority' });
+registerEnumType(TaskCategory, { name: 'TaskCategory' });
 
 @ObjectType()
 export class Task {
@@ -29,11 +36,20 @@ export class Task {
   @Field({ nullable: true })
   description?: string;
 
+  @Field()
+  onboardingId: string;
+
+  @Field({ nullable: true })
+  assigneeId?: string;
+
   @Field(() => TaskStatus)
   status: TaskStatus;
 
   @Field(() => Priority)
   priority: Priority;
+
+  @Field(() => TaskCategory)
+  category: TaskCategory;
 
   @Field()
   dueDate: Date;
@@ -49,4 +65,17 @@ export class Task {
 
   @Field()
   updatedAt: Date;
+
+  // Flat denormalized fields for easy frontend use
+  @Field({ nullable: true })
+  assigneeFirstName?: string;
+
+  @Field({ nullable: true })
+  assigneeLastName?: string;
+
+  @Field({ nullable: true })
+  employeeFirstName?: string;
+
+  @Field({ nullable: true })
+  employeeLastName?: string;
 }

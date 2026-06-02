@@ -1,4 +1,4 @@
-import { ObjectType, Field, ID, Float } from '@nestjs/graphql';
+import { ObjectType, Field, ID, Float, registerEnumType } from '@nestjs/graphql';
 
 @ObjectType()
 export class Evaluation {
@@ -6,32 +6,36 @@ export class Evaluation {
   id: string;
 
   @Field()
-  employeeName: string;
+  employeeId: string;
 
   @Field()
-  position: string;
+  evaluatorId: string;
+
+  @Field(() => Float)
+  score: number;
+
+  @Field({ nullable: true })
+  comments?: string;
 
   @Field()
-  dueDate: string;
-
-  @Field()
-  status: string;
-
-  @Field()
-  type: string;
-
-  @Field(() => Float, { nullable: true })
-  score?: number;
-
-  @Field()
-  initials: string;
-
-  @Field()
-  color: string;
+  isAutoEvaluation: boolean;
 
   @Field()
   createdAt: Date;
 
-  @Field()
-  updatedAt: Date;
+  // Denormalized
+  @Field({ nullable: true })
+  employeeFirstName?: string;
+
+  @Field({ nullable: true })
+  employeeLastName?: string;
+
+  @Field({ nullable: true })
+  evaluatorFirstName?: string;
+
+  @Field({ nullable: true })
+  evaluatorLastName?: string;
+
+  @Field({ nullable: true })
+  positionTitle?: string;
 }

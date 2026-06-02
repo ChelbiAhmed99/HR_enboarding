@@ -80,37 +80,116 @@ Le service IA apporte une valeur ajoutée réaliste pour assister les utilisateu
 ## 🚀 Installation et Lancement
 
 ### Prérequis
-- Docker et Docker Compose installés sur votre machine.
+- Node.js (v18+) et npm.
+- PostgreSQL installé localement ou exécuté via Docker.
+- Docker et Docker Compose (si déploiement via conteneurs).
 
-### Instructions de déploiement
-1. Clonez ou placez-vous dans le répertoire du projet :
+---
+
+### Option 1 : Lancement Local (Développement)
+
+#### 1. Configurer et démarrer la Base de Données
+Assurez-vous d'avoir une base de données PostgreSQL active et configurée dans `backend/.env` :
+```env
+DATABASE_URL="postgresql://hr_user:hr_password@localhost:5432/hr_onboarding?schema=public"
+```
+
+#### 2. Démarrer le Backend (NestJS)
+```bash
+cd backend
+npm install
+
+# Initialiser et remplir la base de données (Seeding)
+npx prisma generate
+npx prisma db push --accept-data-loss
+npx prisma db seed
+
+# Lancer en mode développement (watch)
+npm run start:dev
+```
+Le backend sera disponible sur : `http://localhost:4000/graphql` (Playground/API)
+
+#### 3. Démarrer le Frontend (Next.js)
+```bash
+cd frontend
+npm install
+npm run dev
+
+```
+Le frontend sera accessible sur : `http://localhost:3000`
+
+---
+
+### Option 2 : Déploiement Complet avec Docker Compose
+1. Placez-vous à la racine du projet :
    ```bash
    cd HR_enboarding
    ```
 
-2. Lancez l'environnement complet avec Docker Compose :
+2. Lancez l'environnement complet (base de données, backend, frontend et proxy Nginx) :
    ```bash
    docker compose up -d --build
    ```
 
-3. Configurez et initialisez la base de données PostgreSQL avec les données réelles (Seeding) :
+3. Configurez et initialisez la base de données PostgreSQL :
    ```bash
-   # Depuis la machine hôte dans le dossier /backend (ou en entrant dans le conteneur backend)
    cd backend
+   npm install
+   npx prisma generate
    npx prisma db push --accept-data-loss
    npx prisma db seed
+   npm run start:dev
    ```
 
-4. Ouvrez votre navigateur et accédez à la plateforme :
-   - **Application (Frontend)** : `http://localhost:3001` (ou `http://localhost` si le proxy Nginx est actif)
-   - **Playground API (GraphQL)** : `http://localhost:3000/graphql`
+4. Accédez aux services :
+   - **Application (Frontend)** : `http://localhost:3001` (ou via Nginx proxy sur le port par défaut `http://localhost`)
+   - **API (Backend GraphQL)** : `http://localhost:4000/graphql`
 
 ---
 
 ## 👥 Comptes de Test
 
-Utilisez les comptes suivants pour naviguer et tester les différents rôles de la plateforme (mot de passe commun: `password123`) :
+Tous les comptes partagent le même mot de passe : **`password123`**
 
-- 🧑‍💼 **RH / Administrateur** : `admin@smarthr.tn`
-- 👨‍💼 **Manager Technique** : `manager@smarthr.tn`
-- 🧑‍💻 **Salarié (Développeur)** : `salarie@smarthr.tn`
+### 🔴 Administrateur RH (Admin)
+| Champ | Valeur |
+|-------|--------|
+| **Email** | `fatma.benali@smarthr.tn` |
+| **Mot de passe** | `password123` |
+| **Nom** | Fatma Ben Ali |
+| **Accès** | Tableau de bord Admin — gestion complète |
+
+### 🟡 Manager
+| Champ | Valeur |
+|-------|--------|
+| **Email** | `sami.trabelsi@smarthr.tn` |
+| **Mot de passe** | `password123` |
+| **Nom** | Sami Trabelsi |
+| **Accès** | Tableau de bord Manager — validation opérationnelle |
+
+### 🟢 Salariés (Employés)
+| Nom | Email | Mot de passe |
+|-----|-------|--------------|
+| Aymen Khlifi | `aymen.khlifi@smarthr.tn` | `password123` |
+| Nour Mansouri | `nour.mansouri@smarthr.tn` | `password123` |
+| Kais Saidi | `kais.saidi@smarthr.tn` | `password123` |
+
+> **Note** : Tout nouveau salarié créé via l'interface Admin reçoit automatiquement le mot de passe par défaut `password123`.
+
+---
+
+## ⚡ Conseils de Performance (Frontend)
+
+Si le frontend met du temps à charger au premier lancement :
+
+```bash
+# Supprimer le cache Next.js si corrompu ou trop volumineux
+rm -rf frontend/.next
+
+# Relancer le serveur de développement
+cd frontend && npm run dev
+```
+
+- Le **premier chargement** après `npm run dev` prend ~5–10s (compilation initiale).
+- Les **navigations suivantes** sont < 200ms grâce au cache Turbopack.
+- La variable `NEXT_TELEMETRY_DISABLED=1` dans `frontend/.env.local` désactive la télémétrie pour accélérer le démarrage.
