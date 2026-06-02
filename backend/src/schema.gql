@@ -116,6 +116,7 @@ input LoginInput {
 
 type Mutation {
   addDocument(name: String!, onboardingId: ID!, type: String!, url: String!): Document!
+  assignTask(assigneeId: ID!, id: ID!): Task!
   createDepartment(description: String, managerId: String, name: String!): Department!
   createEmployee(departmentId: ID, email: String!, firstName: String!, lastName: String!, positionId: ID!): Employee!
   createEvaluation(comments: String, employeeId: ID!, evaluatorId: ID!, isAutoEvaluation: Boolean, score: Float!): Evaluation!

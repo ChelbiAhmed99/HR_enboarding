@@ -167,8 +167,32 @@ let TasksService = class TasksService {
             },
         });
         const employeeUserId = task?.onboarding?.employee?.userId;
-        if (employeeUserId) {
-            await this.notifications.notifyUser(employeeUserId, '📌 Nouvelle tâche assignée', `Une nouvelle tâche "${task.title}" vous a été assignée. Échéance : ${new Date(task.dueDate).toLocaleDateString('fr-FR')}.`, 'TASK');
+        const assigneeUserId = data.assigneeId;
+        if (assigneeUserId) {
+            await this.notifications.notifyUser(assigneeUserId, '📌 Nouvelle tâche assignée', `Une nouvelle tâche "${task.title}" vous a été assignée. Échéance : ${new Date(task.dueDate).toLocaleDateString('fr-FR')}.`, 'TASK');
+        }
+        if (employeeUserId && employeeUserId !== assigneeUserId) {
+            await this.notifications.notifyUser(employeeUserId, '📋 Nouvelle tâche dans votre parcours', `Une nouvelle tâche "${task.title}" a été ajoutée à votre parcours d'intégration.`, 'TASK');
+        }
+        return this.mapTask(task);
+    }
+    async assignTask(id, assigneeId) {
+        const oldTask = await this.prisma.task.findUnique({
+            where: { id },
+            include: { assignee: true },
+        });
+        if (!oldTask)
+            throw new Error(`Task ${id} not found`);
+        const task = await this.prisma.task.update({
+            where: { id },
+            data: { assigneeId },
+            include: {
+                assignee: true,
+                onboarding: { include: { employee: { include: { user: true } } } },
+            },
+        });
+        if (assigneeId !== oldTask.assigneeId) {
+            await this.notifications.notifyUser(assigneeId, '📌 Tâche assignée', `La tâche "${task.title}" vous a été assignée. Échéance : ${new Date(task.dueDate).toLocaleDateString('fr-FR')}.`, 'TASK');
         }
         return this.mapTask(task);
     }

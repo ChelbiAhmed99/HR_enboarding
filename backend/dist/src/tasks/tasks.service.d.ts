@@ -223,6 +223,25 @@ export declare class TasksService {
         employeeFirstName: any;
         employeeLastName: any;
     }>;
+    assignTask(id: string, assigneeId: string): Promise<{
+        id: any;
+        title: any;
+        description: any;
+        onboardingId: any;
+        assigneeId: any;
+        status: any;
+        priority: any;
+        category: any;
+        dueDate: any;
+        completedAt: any;
+        comments: any;
+        createdAt: any;
+        updatedAt: any;
+        assigneeFirstName: any;
+        assigneeLastName: any;
+        employeeFirstName: any;
+        employeeLastName: any;
+    }>;
     private recalculateProgress;
     private mapTask;
 }

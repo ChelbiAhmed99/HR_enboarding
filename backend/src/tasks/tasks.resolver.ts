@@ -71,5 +71,13 @@ export class TasksResolver {
   markDone(@Args('id', { type: () => ID }) id: string) {
     return this.tasksService.markDone(id);
   }
+
+  @Mutation(() => Task, { name: 'assignTask' })
+  assignTask(
+    @Args('id', { type: () => ID }) id: string,
+    @Args('assigneeId', { type: () => ID }) assigneeId: string,
+  ) {
+    return this.tasksService.assignTask(id, assigneeId);
+  }
 }
 

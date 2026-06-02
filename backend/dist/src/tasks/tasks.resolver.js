@@ -53,6 +53,9 @@ let TasksResolver = class TasksResolver {
     markDone(id) {
         return this.tasksService.markDone(id);
     }
+    assignTask(id, assigneeId) {
+        return this.tasksService.assignTask(id, assigneeId);
+    }
 };
 exports.TasksResolver = TasksResolver;
 __decorate([
@@ -139,6 +142,14 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], TasksResolver.prototype, "markDone", null);
+__decorate([
+    (0, graphql_1.Mutation)(() => tasks_entity_1.Task, { name: 'assignTask' }),
+    __param(0, (0, graphql_1.Args)('id', { type: () => graphql_1.ID })),
+    __param(1, (0, graphql_1.Args)('assigneeId', { type: () => graphql_1.ID })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], TasksResolver.prototype, "assignTask", null);
 exports.TasksResolver = TasksResolver = __decorate([
     (0, graphql_1.Resolver)(() => tasks_entity_1.Task),
     __metadata("design:paramtypes", [tasks_service_1.TasksService])
