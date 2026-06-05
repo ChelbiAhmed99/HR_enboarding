@@ -2,6 +2,18 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type AiChatResponseType {
+  response: String!
+  suggestedQuestions: [String!]!
+}
+
+type AiInsightType {
+  message: String!
+  priority: String!
+  title: String!
+  type: String!
+}
+
 type AuthResponse {
   access_token: String!
   user: User!
@@ -49,6 +61,14 @@ type Document {
   type: String!
   uploadedAt: DateTime!
   url: String!
+}
+
+type DocumentAnalysisResult {
+  confidence: Float!
+  documentType: String!
+  extractedFields: [String!]!
+  missingFields: [String!]!
+  recommendations: String!
 }
 
 enum DocumentStatus {
@@ -131,18 +151,20 @@ type Mutation {
   deleteOnboardingStep(id: ID!): OnboardingStepEntity!
   deletePosition(id: ID!): Position!
   deleteTaskTemplate(id: ID!): TaskTemplateEntity!
+  deleteUser(id: ID!): User!
   login(loginInput: LoginInput!): AuthResponse!
   markAllNotificationsRead(userId: ID!): Boolean!
   markNotificationRead(id: ID!): NotificationEntity!
   markTaskDone(id: ID!): Task!
   rejectDocument(comments: String, id: ID!, validatorId: ID!): Document!
-  rejectTask(id: ID!): Task!
+  rejectTask(id: ID!, validatorId: ID): Task!
   setTrialEndDate(id: ID!, trialEndDate: String!): EmployeeOnboarding!
   toggleTemplateActive(id: ID!): OnboardingTemplate!
   updateEmployee(departmentId: ID, id: ID!, positionId: ID): Employee!
   updateTaskStatus(id: ID!, status: TaskStatus!): Task!
+  updateUser(email: String, firstName: String, id: ID!, isActive: Boolean, lastName: String, role: Role): User!
   validateDocument(id: ID!, validatorId: ID!): Document!
-  validateTask(id: ID!): Task!
+  validateTask(id: ID!, validatorId: ID): Task!
   validateTrialPeriod(comment: String, id: ID!, validated: Boolean!, validatedById: String): EmployeeOnboarding!
 }
 
@@ -150,8 +172,10 @@ type NotificationEntity {
   createdAt: DateTime!
   id: ID!
   isRead: Boolean!
+  link: String
   message: String!
   title: String!
+  type: String
   userId: String!
 }
 
@@ -219,6 +243,9 @@ enum Priority {
 }
 
 type Query {
+  aiAnalyzeDocument(name: String!, type: String!): DocumentAnalysisResult!
+  aiChat(question: String!, userId: ID!): AiChatResponseType!
+  aiInsights: [AiInsightType!]!
   dashboardStats: DashboardStats!
   department(id: ID!): Department
   departments: [Department!]!

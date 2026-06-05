@@ -6,18 +6,17 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EvaluationsModule = void 0;
+exports.AiModule = void 0;
 const common_1 = require("@nestjs/common");
-const evaluations_service_1 = require("./evaluations.service");
-const evaluations_resolver_1 = require("./evaluations.resolver");
-const notifications_module_1 = require("../notifications/notifications.module");
-let EvaluationsModule = class EvaluationsModule {
+const ai_service_1 = require("./ai.service");
+const ai_resolver_1 = require("./ai.resolver");
+let AiModule = class AiModule {
 };
-exports.EvaluationsModule = EvaluationsModule;
-exports.EvaluationsModule = EvaluationsModule = __decorate([
+exports.AiModule = AiModule;
+exports.AiModule = AiModule = __decorate([
     (0, common_1.Module)({
-        imports: [notifications_module_1.NotificationsModule],
-        providers: [evaluations_resolver_1.EvaluationsResolver, evaluations_service_1.EvaluationsService],
+        providers: [ai_service_1.AiService, ai_resolver_1.AiResolver],
+        exports: [ai_service_1.AiService],
     })
-], EvaluationsModule);
-//# sourceMappingURL=evaluations.module.js.map
+], AiModule);
+//# sourceMappingURL=ai.module.js.map

@@ -12,10 +12,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EvaluationsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const notifications_service_1 = require("../notifications/notifications.service");
 let EvaluationsService = class EvaluationsService {
     prisma;
-    constructor(prisma) {
+    notifications;
+    constructor(prisma, notifications) {
         this.prisma = prisma;
+        this.notifications = notifications;
     }
     async findAll() {
         const evals = await this.prisma.evaluation.findMany({
@@ -58,6 +61,25 @@ let EvaluationsService = class EvaluationsService {
                 evaluator: true,
             },
         });
+        const employeeName = `${ev.employee?.user?.firstName ?? ''} ${ev.employee?.user?.lastName ?? ''}`.trim();
+        const evaluatorName = `${ev.evaluator?.firstName ?? ''} ${ev.evaluator?.lastName ?? ''}`.trim();
+        if (isAutoEvaluation) {
+            const managerId = await this.notifications.findEmployeeDepartmentManagerId(employeeId);
+            if (managerId) {
+                await this.notifications.notifyUser(managerId, '📊 Auto-évaluation soumise', `${employeeName} a soumis son auto-évaluation (score : ${score}/5). Consultez-la pour planifier le suivi.`, 'EVALUATION', '/manager/evaluations');
+            }
+            const adminIds = await this.notifications.findAdminUserIds();
+            const filteredAdminIds = adminIds.filter((aid) => aid !== managerId);
+            if (filteredAdminIds.length > 0) {
+                await this.notifications.notifyMultipleUsers(filteredAdminIds, '📊 Auto-évaluation soumise', `${employeeName} a soumis son auto-évaluation (score : ${score}/5).`, 'EVALUATION', '/admin/employees');
+            }
+        }
+        else {
+            const employeeUserId = ev.employee?.userId;
+            if (employeeUserId) {
+                await this.notifications.notifyUser(employeeUserId, '📊 Nouvelle évaluation reçue', `${evaluatorName} a ajouté une évaluation à votre dossier (score : ${score}/5).${comments ? ` Commentaire : ${comments}` : ''}`, 'EVALUATION', '/employee/evaluation');
+            }
+        }
         return this.mapEvaluation(ev);
     }
     mapEvaluation(ev) {
@@ -80,6 +102,7 @@ let EvaluationsService = class EvaluationsService {
 exports.EvaluationsService = EvaluationsService;
 exports.EvaluationsService = EvaluationsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        notifications_service_1.NotificationsService])
 ], EvaluationsService);
 //# sourceMappingURL=evaluations.service.js.map

@@ -16,6 +16,12 @@ export class NotificationEntity {
   @Field()
   message: string;
 
+  @Field({ nullable: true })
+  type?: string;
+
+  @Field({ nullable: true })
+  link?: string;
+
   @Field()
   isRead: boolean;
 

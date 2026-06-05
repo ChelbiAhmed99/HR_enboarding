@@ -7,6 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
+const ai_module_1 = require("./ai/ai.module");
 const evaluations_module_1 = require("./evaluations/evaluations.module");
 const documents_module_1 = require("./documents/documents.module");
 const tasks_module_1 = require("./tasks/tasks.module");
@@ -31,6 +32,7 @@ exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            ai_module_1.AiModule,
             evaluations_module_1.EvaluationsModule,
             documents_module_1.DocumentsModule,
             tasks_module_1.TasksModule,

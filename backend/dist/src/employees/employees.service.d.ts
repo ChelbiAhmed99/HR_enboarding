@@ -52,7 +52,7 @@ export declare class EmployeesService {
         onboardingStatus: any;
         onboardingProgress: any;
         onboardingId: any;
-    }>;
+    } | null>;
     getDashboardStats(): Promise<{
         total: number;
         inProgress: number;

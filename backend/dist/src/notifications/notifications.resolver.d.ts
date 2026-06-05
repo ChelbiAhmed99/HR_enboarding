@@ -4,6 +4,8 @@ export declare class NotificationEntity {
     userId: string;
     title: string;
     message: string;
+    type?: string;
+    link?: string;
     isRead: boolean;
     createdAt: Date;
 }
@@ -15,6 +17,8 @@ export declare class NotificationsResolver {
         createdAt: Date;
         title: string;
         userId: string;
+        type: string | null;
+        link: string | null;
         message: string;
         isRead: boolean;
     }[]>;
@@ -24,6 +28,8 @@ export declare class NotificationsResolver {
         createdAt: Date;
         title: string;
         userId: string;
+        type: string | null;
+        link: string | null;
         message: string;
         isRead: boolean;
     }>;
@@ -33,6 +39,8 @@ export declare class NotificationsResolver {
         createdAt: Date;
         title: string;
         userId: string;
+        type: string | null;
+        link: string | null;
         message: string;
         isRead: boolean;
     }>;

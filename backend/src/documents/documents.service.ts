@@ -2,12 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { DocumentStatus } from '@prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
+import { AiService } from '../ai/ai.service';
 
 @Injectable()
 export class DocumentsService {
   constructor(
     private prisma: PrismaService,
     private notifications: NotificationsService,
+    private aiService: AiService,
   ) {}
 
   async findAll() {
@@ -55,10 +57,49 @@ export class DocumentsService {
         status: DocumentStatus.PENDING,
       },
       include: {
-        onboarding: { include: { employee: { include: { user: true } } } },
+        onboarding: { include: { employee: { include: { user: true, department: true } } } },
         aiAnalysis: true,
       },
     });
+
+    // ── AI Auto-Analysis ──
+    try {
+      const analysis = this.aiService.analyzeDocument(name, type);
+      await this.aiService.saveAnalysis(doc.id, analysis);
+    } catch (e) {
+      console.warn('AI analysis failed silently for document:', doc.id, e);
+    }
+
+    const employeeName = `${doc.onboarding?.employee?.user?.firstName ?? ''} ${doc.onboarding?.employee?.user?.lastName ?? ''}`.trim();
+
+    // 1. Notify ALL HR administrators that a new document was submitted
+    const adminIds = await this.notifications.findAdminUserIds();
+    if (adminIds.length > 0) {
+      await this.notifications.notifyMultipleUsers(
+        adminIds,
+        '📎 Nouveau document soumis',
+        `${employeeName} a soumis le document "${name}" (${type}) — En attente de validation.`,
+        'DOCUMENT',
+        '/admin/documents',
+      );
+    }
+
+    // 2. Notify the department manager if applicable
+    const employeeId = doc.onboarding?.employee?.id;
+    if (employeeId) {
+      const managerId =
+        await this.notifications.findEmployeeDepartmentManagerId(employeeId);
+      if (managerId && !adminIds.includes(managerId)) {
+        await this.notifications.notifyUser(
+          managerId,
+          '📎 Document soumis par un membre de votre équipe',
+          `${employeeName} a soumis le document "${name}" (${type}).`,
+          'DOCUMENT',
+          '/manager/team',
+        );
+      }
+    }
+
     return this.mapDocument(doc);
   }
 
@@ -74,14 +115,26 @@ export class DocumentsService {
     await this.prisma.documentValidation.create({
       data: { documentId: id, validatorId, status: DocumentStatus.VALIDATED },
     });
+
+    // Resolve validator name
+    let validatorLabel = 'l\'équipe RH';
+    const validator = await this.prisma.user.findUnique({
+      where: { id: validatorId },
+      select: { firstName: true, lastName: true },
+    });
+    if (validator) {
+      validatorLabel = `${validator.firstName} ${validator.lastName}`;
+    }
+
     // Notify employee
     const userId = doc.onboarding?.employee?.userId;
     if (userId) {
       await this.notifications.notifyUser(
         userId,
         '✅ Document validé',
-        `Votre document "${doc.name}" a été validé et archivé avec succès.`,
+        `Votre document "${doc.name}" a été validé par ${validatorLabel} et archivé avec succès.`,
         'DOCUMENT',
+        '/employee/documents',
       );
     }
     return this.mapDocument(doc);
@@ -99,14 +152,26 @@ export class DocumentsService {
     await this.prisma.documentValidation.create({
       data: { documentId: id, validatorId, status: DocumentStatus.REJECTED, comments },
     });
+
+    // Resolve validator name
+    let validatorLabel = 'l\'équipe RH';
+    const validator = await this.prisma.user.findUnique({
+      where: { id: validatorId },
+      select: { firstName: true, lastName: true },
+    });
+    if (validator) {
+      validatorLabel = `${validator.firstName} ${validator.lastName}`;
+    }
+
     // Notify employee
     const userId = doc.onboarding?.employee?.userId;
     if (userId) {
       await this.notifications.notifyUser(
         userId,
         '❌ Document rejeté',
-        `Votre document "${doc.name}" a été rejeté.${comments ? ` Motif : ${comments}` : ' Veuillez le soumettre à nouveau.'}`,
+        `Votre document "${doc.name}" a été rejeté par ${validatorLabel}.${comments ? ` Motif : ${comments}` : ' Veuillez le corriger et le soumettre à nouveau.'}`,
         'DOCUMENT',
+        '/employee/documents',
       );
     }
     return this.mapDocument(doc);

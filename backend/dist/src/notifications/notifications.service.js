@@ -48,6 +48,8 @@ let NotificationsService = class NotificationsService {
                 userId: data.userId,
                 title: data.title,
                 message: data.message,
+                type: data.type ?? null,
+                link: data.link ?? null,
                 isRead: false,
             },
         });
@@ -59,6 +61,24 @@ let NotificationsService = class NotificationsService {
         catch (e) {
             console.warn('Notification creation failed silently:', e);
         }
+    }
+    async notifyMultipleUsers(userIds, title, message, type, link) {
+        const uniqueIds = [...new Set(userIds.filter(Boolean))];
+        await Promise.allSettled(uniqueIds.map((uid) => this.notifyUser(uid, title, message, type, link)));
+    }
+    async findAdminUserIds() {
+        const admins = await this.prisma.user.findMany({
+            where: { role: 'ADMIN', isActive: true },
+            select: { id: true },
+        });
+        return admins.map((a) => a.id);
+    }
+    async findEmployeeDepartmentManagerId(employeeId) {
+        const employee = await this.prisma.employee.findUnique({
+            where: { id: employeeId },
+            include: { department: true },
+        });
+        return employee?.department?.managerId ?? null;
     }
 };
 exports.NotificationsService = NotificationsService;

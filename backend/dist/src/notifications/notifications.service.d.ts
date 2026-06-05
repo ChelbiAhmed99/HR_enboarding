@@ -7,6 +7,8 @@ export declare class NotificationsService {
         createdAt: Date;
         title: string;
         userId: string;
+        type: string | null;
+        link: string | null;
         message: string;
         isRead: boolean;
     }[]>;
@@ -16,6 +18,8 @@ export declare class NotificationsService {
         createdAt: Date;
         title: string;
         userId: string;
+        type: string | null;
+        link: string | null;
         message: string;
         isRead: boolean;
     }>;
@@ -31,8 +35,13 @@ export declare class NotificationsService {
         createdAt: Date;
         title: string;
         userId: string;
+        type: string | null;
+        link: string | null;
         message: string;
         isRead: boolean;
     }>;
     notifyUser(userId: string, title: string, message: string, type?: string, link?: string): Promise<void>;
+    notifyMultipleUsers(userIds: string[], title: string, message: string, type?: string, link?: string): Promise<void>;
+    findAdminUserIds(): Promise<string[]>;
+    findEmployeeDepartmentManagerId(employeeId: string): Promise<string | null>;
 }

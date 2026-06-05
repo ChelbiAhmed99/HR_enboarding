@@ -71,6 +71,46 @@ let UsersService = class UsersService {
     findByEmail(email) {
         return this.prisma.user.findUnique({ where: { email } });
     }
+    async updateUser(id, data) {
+        const user = await this.prisma.user.findUnique({ where: { id } });
+        if (!user)
+            throw new common_1.NotFoundException(`Utilisateur ${id} introuvable`);
+        const updateData = {};
+        if (data.firstName !== undefined)
+            updateData.firstName = data.firstName;
+        if (data.lastName !== undefined)
+            updateData.lastName = data.lastName;
+        if (data.email !== undefined)
+            updateData.email = data.email;
+        if (data.role !== undefined)
+            updateData.role = data.role;
+        if (data.isActive !== undefined)
+            updateData.isActive = data.isActive;
+        return this.prisma.user.update({
+            where: { id },
+            data: updateData,
+        });
+    }
+    async deleteUser(id) {
+        const user = await this.prisma.user.findUnique({ where: { id } });
+        if (!user)
+            throw new common_1.NotFoundException(`Utilisateur ${id} introuvable`);
+        const employee = await this.prisma.employee.findUnique({
+            where: { userId: id },
+            include: { onboarding: true },
+        });
+        if (employee?.onboarding) {
+            await this.prisma.document.deleteMany({ where: { onboardingId: employee.onboarding.id } });
+            await this.prisma.task.deleteMany({ where: { onboardingId: employee.onboarding.id } });
+            await this.prisma.employeeOnboarding.delete({ where: { id: employee.onboarding.id } });
+        }
+        if (employee) {
+            await this.prisma.evaluation.deleteMany({ where: { employeeId: employee.id } });
+            await this.prisma.employee.delete({ where: { id: employee.id } });
+        }
+        await this.prisma.notification.deleteMany({ where: { userId: id } });
+        return this.prisma.user.delete({ where: { id } });
+    }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([

@@ -47,4 +47,32 @@ export declare class UsersService {
         createdAt: Date;
         updatedAt: Date;
     } | null, null, import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    updateUser(id: string, data: {
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+        role?: string;
+        isActive?: boolean;
+    }): Promise<{
+        id: string;
+        email: string;
+        password: string;
+        firstName: string;
+        lastName: string;
+        role: import("@prisma/client").$Enums.Role;
+        isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    deleteUser(id: string): Promise<{
+        id: string;
+        email: string;
+        password: string;
+        firstName: string;
+        lastName: string;
+        role: import("@prisma/client").$Enums.Role;
+        isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
 }

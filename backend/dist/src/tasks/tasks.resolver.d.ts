@@ -155,7 +155,7 @@ export declare class TasksResolver {
         employeeFirstName: any;
         employeeLastName: any;
     }>;
-    validateTask(id: string): Promise<{
+    validateTask(id: string, validatorId?: string): Promise<{
         id: any;
         title: any;
         description: any;
@@ -174,7 +174,7 @@ export declare class TasksResolver {
         employeeFirstName: any;
         employeeLastName: any;
     }>;
-    rejectTask(id: string): Promise<{
+    rejectTask(id: string, validatorId?: string): Promise<{
         id: any;
         title: any;
         description: any;

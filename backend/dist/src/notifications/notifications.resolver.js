@@ -21,6 +21,8 @@ let NotificationEntity = class NotificationEntity {
     userId;
     title;
     message;
+    type;
+    link;
     isRead;
     createdAt;
 };
@@ -41,6 +43,14 @@ __decorate([
     (0, graphql_2.Field)(),
     __metadata("design:type", String)
 ], NotificationEntity.prototype, "message", void 0);
+__decorate([
+    (0, graphql_2.Field)({ nullable: true }),
+    __metadata("design:type", String)
+], NotificationEntity.prototype, "type", void 0);
+__decorate([
+    (0, graphql_2.Field)({ nullable: true }),
+    __metadata("design:type", String)
+], NotificationEntity.prototype, "link", void 0);
 __decorate([
     (0, graphql_2.Field)(),
     __metadata("design:type", Boolean)

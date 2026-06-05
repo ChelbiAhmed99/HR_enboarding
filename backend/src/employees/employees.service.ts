@@ -42,7 +42,9 @@ export class EmployeesService {
         onboarding: { include: { tasks: true, documents: true } },
       },
     });
-    if (!emp) throw new NotFoundException(`Employee for user ${userId} not found`);
+    // Return null gracefully — do NOT throw, so the GraphQL layer
+    // returns null instead of an error that crashes the employee dashboard.
+    if (!emp) return null;
     return this.mapEmployee(emp);
   }
 

@@ -58,13 +58,19 @@ export class TasksResolver {
   ) { return this.tasksService.updateStatus(id, status as any); }
 
   @Mutation(() => Task, { name: 'validateTask' })
-  validateTask(@Args('id', { type: () => ID }) id: string) {
-    return this.tasksService.validateTask(id);
+  validateTask(
+    @Args('id', { type: () => ID }) id: string,
+    @Args('validatorId', { type: () => ID, nullable: true }) validatorId?: string,
+  ) {
+    return this.tasksService.validateTask(id, validatorId);
   }
 
   @Mutation(() => Task, { name: 'rejectTask' })
-  rejectTask(@Args('id', { type: () => ID }) id: string) {
-    return this.tasksService.rejectTask(id);
+  rejectTask(
+    @Args('id', { type: () => ID }) id: string,
+    @Args('validatorId', { type: () => ID, nullable: true }) validatorId?: string,
+  ) {
+    return this.tasksService.rejectTask(id, validatorId);
   }
 
   @Mutation(() => Task, { name: 'markTaskDone' })
@@ -80,4 +86,3 @@ export class TasksResolver {
     return this.tasksService.assignTask(id, assigneeId);
   }
 }
-

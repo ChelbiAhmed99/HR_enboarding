@@ -44,11 +44,11 @@ let TasksResolver = class TasksResolver {
         });
     }
     updateStatus(id, status) { return this.tasksService.updateStatus(id, status); }
-    validateTask(id) {
-        return this.tasksService.validateTask(id);
+    validateTask(id, validatorId) {
+        return this.tasksService.validateTask(id, validatorId);
     }
-    rejectTask(id) {
-        return this.tasksService.rejectTask(id);
+    rejectTask(id, validatorId) {
+        return this.tasksService.rejectTask(id, validatorId);
     }
     markDone(id) {
         return this.tasksService.markDone(id);
@@ -124,15 +124,17 @@ __decorate([
 __decorate([
     (0, graphql_1.Mutation)(() => tasks_entity_1.Task, { name: 'validateTask' }),
     __param(0, (0, graphql_1.Args)('id', { type: () => graphql_1.ID })),
+    __param(1, (0, graphql_1.Args)('validatorId', { type: () => graphql_1.ID, nullable: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], TasksResolver.prototype, "validateTask", null);
 __decorate([
     (0, graphql_1.Mutation)(() => tasks_entity_1.Task, { name: 'rejectTask' }),
     __param(0, (0, graphql_1.Args)('id', { type: () => graphql_1.ID })),
+    __param(1, (0, graphql_1.Args)('validatorId', { type: () => graphql_1.ID, nullable: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], TasksResolver.prototype, "rejectTask", null);
 __decorate([

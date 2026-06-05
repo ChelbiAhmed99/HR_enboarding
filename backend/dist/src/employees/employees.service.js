@@ -87,7 +87,7 @@ let EmployeesService = class EmployeesService {
             },
         });
         if (!emp)
-            throw new common_1.NotFoundException(`Employee for user ${userId} not found`);
+            return null;
         return this.mapEmployee(emp);
     }
     async getDashboardStats() {

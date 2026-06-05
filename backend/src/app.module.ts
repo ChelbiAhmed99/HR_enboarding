@@ -1,3 +1,4 @@
+import { AiModule } from './ai/ai.module';
 import { EvaluationsModule } from './evaluations/evaluations.module';
 import { DocumentsModule } from './documents/documents.module';
 import { TasksModule } from './tasks/tasks.module';
@@ -19,6 +20,7 @@ import { join } from 'path';
 
 @Module({
   imports: [
+    AiModule,
     EvaluationsModule,
     DocumentsModule,
     TasksModule,

@@ -104,7 +104,7 @@ let TasksService = class TasksService {
         await this.recalculateProgress(task.onboardingId);
         return this.mapTask(task);
     }
-    async validateTask(id) {
+    async validateTask(id, validatorId) {
         const task = await this.prisma.task.findUnique({
             where: { id },
             include: {
@@ -112,13 +112,26 @@ let TasksService = class TasksService {
             },
         });
         const result = await this.updateStatus(id, client_1.TaskStatus.VALIDATED);
+        let validatorLabel = 'votre responsable';
+        if (validatorId) {
+            const validator = await this.prisma.user.findUnique({
+                where: { id: validatorId },
+                select: { firstName: true, lastName: true, role: true },
+            });
+            if (validator) {
+                validatorLabel =
+                    validator.role === 'ADMIN'
+                        ? `l'équipe RH (${validator.firstName} ${validator.lastName})`
+                        : `${validator.firstName} ${validator.lastName}`;
+            }
+        }
         const employeeUserId = task?.onboarding?.employee?.userId;
         if (employeeUserId) {
-            await this.notifications.notifyUser(employeeUserId, '✅ Tâche validée', `Votre tâche "${task?.title}" a été validée par votre manager.`, 'TASK');
+            await this.notifications.notifyUser(employeeUserId, '✅ Tâche validée', `Votre tâche "${task?.title}" a été validée par ${validatorLabel}. Félicitations !`, 'TASK', '/employee/tasks');
         }
         return result;
     }
-    async rejectTask(id) {
+    async rejectTask(id, validatorId) {
         const task = await this.prisma.task.findUnique({
             where: { id },
             include: {
@@ -126,9 +139,22 @@ let TasksService = class TasksService {
             },
         });
         const result = await this.updateStatus(id, client_1.TaskStatus.TODO);
+        let validatorLabel = 'votre responsable';
+        if (validatorId) {
+            const validator = await this.prisma.user.findUnique({
+                where: { id: validatorId },
+                select: { firstName: true, lastName: true, role: true },
+            });
+            if (validator) {
+                validatorLabel =
+                    validator.role === 'ADMIN'
+                        ? `l'équipe RH (${validator.firstName} ${validator.lastName})`
+                        : `${validator.firstName} ${validator.lastName}`;
+            }
+        }
         const employeeUserId = task?.onboarding?.employee?.userId;
         if (employeeUserId) {
-            await this.notifications.notifyUser(employeeUserId, '🔄 Tâche renvoyée', `Votre tâche "${task?.title}" a été renvoyée pour correction. Merci de la compléter à nouveau.`, 'TASK');
+            await this.notifications.notifyUser(employeeUserId, '🔄 Tâche renvoyée pour correction', `Votre tâche "${task?.title}" a été renvoyée par ${validatorLabel}. Merci de la revoir et de la soumettre à nouveau.`, 'TASK', '/employee/tasks');
         }
         return result;
     }
@@ -137,14 +163,20 @@ let TasksService = class TasksService {
             where: { id },
             include: {
                 assignee: true,
-                onboarding: { include: { employee: { include: { user: true } } } },
+                onboarding: { include: { employee: { include: { user: true, department: true } } } },
             },
         });
         const result = await this.updateStatus(id, client_1.TaskStatus.DONE);
+        const empName = `${task?.onboarding?.employee?.user?.firstName ?? ''} ${task?.onboarding?.employee?.user?.lastName ?? ''}`.trim();
+        const taskTitle = task?.title ?? '';
         const managerId = task?.assigneeId;
         if (managerId) {
-            const empName = `${task?.onboarding?.employee?.user?.firstName ?? ''} ${task?.onboarding?.employee?.user?.lastName ?? ''}`.trim();
-            await this.notifications.notifyUser(managerId, '📋 Tâche soumise', `${empName} a soumis la tâche "${task?.title}" en attente de validation.`, 'TASK');
+            await this.notifications.notifyUser(managerId, '📋 Nouvelle soumission de tâche', `${empName} a soumis la tâche "${taskTitle}" — En attente de votre validation.`, 'TASK', '/manager/tasks');
+        }
+        const adminIds = await this.notifications.findAdminUserIds();
+        const filteredAdminIds = adminIds.filter((aid) => aid !== managerId);
+        if (filteredAdminIds.length > 0) {
+            await this.notifications.notifyMultipleUsers(filteredAdminIds, '📋 Tâche soumise par un salarié', `${empName} a soumis la tâche "${taskTitle}" — En attente de validation.`, 'TASK', '/admin/employees');
         }
         return result;
     }
@@ -169,10 +201,10 @@ let TasksService = class TasksService {
         const employeeUserId = task?.onboarding?.employee?.userId;
         const assigneeUserId = data.assigneeId;
         if (assigneeUserId) {
-            await this.notifications.notifyUser(assigneeUserId, '📌 Nouvelle tâche assignée', `Une nouvelle tâche "${task.title}" vous a été assignée. Échéance : ${new Date(task.dueDate).toLocaleDateString('fr-FR')}.`, 'TASK');
+            await this.notifications.notifyUser(assigneeUserId, '📌 Nouvelle tâche assignée', `Une nouvelle tâche "${task.title}" vous a été assignée. Échéance : ${new Date(task.dueDate).toLocaleDateString('fr-FR')}.`, 'TASK', '/employee/tasks');
         }
         if (employeeUserId && employeeUserId !== assigneeUserId) {
-            await this.notifications.notifyUser(employeeUserId, '📋 Nouvelle tâche dans votre parcours', `Une nouvelle tâche "${task.title}" a été ajoutée à votre parcours d'intégration.`, 'TASK');
+            await this.notifications.notifyUser(employeeUserId, '📋 Nouvelle tâche dans votre parcours', `Une nouvelle tâche "${task.title}" a été ajoutée à votre parcours d'intégration. Échéance : ${new Date(task.dueDate).toLocaleDateString('fr-FR')}.`, 'TASK', '/employee/tasks');
         }
         return this.mapTask(task);
     }
@@ -192,7 +224,7 @@ let TasksService = class TasksService {
             },
         });
         if (assigneeId !== oldTask.assigneeId) {
-            await this.notifications.notifyUser(assigneeId, '📌 Tâche assignée', `La tâche "${task.title}" vous a été assignée. Échéance : ${new Date(task.dueDate).toLocaleDateString('fr-FR')}.`, 'TASK');
+            await this.notifications.notifyUser(assigneeId, '📌 Tâche assignée', `La tâche "${task.title}" vous a été assignée. Échéance : ${new Date(task.dueDate).toLocaleDateString('fr-FR')}.`, 'TASK', '/employee/tasks');
         }
         return this.mapTask(task);
     }

@@ -1,9 +1,11 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { AiService } from '../ai/ai.service';
 export declare class DocumentsService {
     private prisma;
     private notifications;
-    constructor(prisma: PrismaService, notifications: NotificationsService);
+    private aiService;
+    constructor(prisma: PrismaService, notifications: NotificationsService, aiService: AiService);
     findAll(): Promise<{
         id: any;
         name: any;

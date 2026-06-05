@@ -46,11 +46,16 @@ export class NotificationsService {
         userId: data.userId,
         title: data.title,
         message: data.message,
+        type: data.type ?? null,
+        link: data.link ?? null,
         isRead: false,
       },
     });
   }
 
+  /**
+   * Send a notification to a single user (fire-and-forget, never blocks the caller).
+   */
   async notifyUser(
     userId: string,
     title: string,
@@ -64,5 +69,48 @@ export class NotificationsService {
       // Don't block main operation on notification failure
       console.warn('Notification creation failed silently:', e);
     }
+  }
+
+  /**
+   * Send the same notification to multiple users at once.
+   * Useful for notifying all HR admins or a group of managers.
+   */
+  async notifyMultipleUsers(
+    userIds: string[],
+    title: string,
+    message: string,
+    type?: string,
+    link?: string,
+  ) {
+    const uniqueIds = [...new Set(userIds.filter(Boolean))];
+    await Promise.allSettled(
+      uniqueIds.map((uid) => this.notifyUser(uid, title, message, type, link)),
+    );
+  }
+
+  /**
+   * Find all users with the ADMIN role (HR administrators).
+   * Returns an array of user IDs.
+   */
+  async findAdminUserIds(): Promise<string[]> {
+    const admins = await this.prisma.user.findMany({
+      where: { role: 'ADMIN', isActive: true },
+      select: { id: true },
+    });
+    return admins.map((a) => a.id);
+  }
+
+  /**
+   * Find the department manager userId for a given employee.
+   * Returns null if no manager is assigned.
+   */
+  async findEmployeeDepartmentManagerId(
+    employeeId: string,
+  ): Promise<string | null> {
+    const employee = await this.prisma.employee.findUnique({
+      where: { id: employeeId },
+      include: { department: true },
+    });
+    return employee?.department?.managerId ?? null;
   }
 }
